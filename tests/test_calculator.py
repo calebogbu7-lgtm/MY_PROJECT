@@ -1,6 +1,6 @@
 import unittest
 from src.calculator import calculate
-
+from src.calculator import calculate, format_result
 
 class TestCalculator(unittest.TestCase):
 
@@ -42,6 +42,43 @@ class TestCalculator(unittest.TestCase):
 
     def test_invalid_expression(self):
         self.assertEqual(calculate("4 +"), "Invalid expression")
+    
+    def test_exponent_greater_than_100(self):
+        self.assertEqual(calculate("2 ** 101"), 2 ** 101)
+
+    def test_large_integer_calculation(self):
+        self.assertEqual(calculate("2 ** 1000"), 2 ** 1000)
+
+    
+    def test_large_integer_formatting(self):
+        result = calculate("2 ** 1000")
+        formatted = format_result(result)
+
+        self.assertIn("e+", formatted)
+
+
+    def test_normal_result_formatting(self):
+        self.assertEqual(format_result(25), "25")
+
+ 
+    
+    
+    def test_exponent_within_limit(self):
+        self.assertEqual(calculate("2 ** 100"), 2 ** 100)
+
+
+    def test_exponent_over_limit(self):
+        self.assertEqual(
+        calculate("2 ** 10001"),
+        "Calculation overflow"
+    )
+
+
+    def test_extremely_large_exponent(self):
+        self.assertEqual(
+        calculate("6767677 ** 4554554555"),
+        "Calculation overflow"
+    )
 
 
 if __name__ == "__main__":

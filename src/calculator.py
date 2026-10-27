@@ -1,5 +1,6 @@
 import ast
 import operator
+import math
 
 
 OPERATORS = {
@@ -14,32 +15,6 @@ OPERATORS = {
 
 def calculate(expression):
     """Evaluate a mathematical expression safely."""
-    try:
-        tree = ast.parse(expression, mode="eval")
-        return _evaluate(tree.body)
-    except ZeroDivisionError:
-        return "Cannot divide by zero"
-    except (SyntaxError, ValueError, TypeError, OverflowError):
-        return "Invalid expression"
-
-
-def _evaluate(node):
-    if isinstance(node, ast.Constant) and type(node.value) in (int, float):
-        return node.value
-
-    if isinstance(node, ast.BinOp) and type(node.op) in OPERATORS:
-        left = _evaluate(node.left)
-        right = _evaluate(node.right)
-        return OPERATORS[type(node.op)](left, right)
-
-    if isinstance(node, ast.UnaryOp) and isinstance(node.op, (ast.UAdd, ast.USub)):
-        value = _evaluate(node.operand)
-        return value if isinstance(node.op, ast.UAdd) else -value
-
-    raise ValueError("Unsupported expression")
-
-def calculate(expression):
-    """Evaluate a mathematical expression safely."""
 
     if not isinstance(expression, str):
         return "Invalid expression"
@@ -50,15 +25,68 @@ def calculate(expression):
     try:
         tree = ast.parse(expression, mode="eval")
         return _evaluate(tree.body)
+    
+    
     except ZeroDivisionError:
         return "Cannot divide by zero"
-    except (SyntaxError, ValueError, TypeError, OverflowError):
+    except OverflowError:
+        return "Calculation overflow"
+    except (SyntaxError, ValueError, TypeError):
         return "Invalid expression"
-if isinstance(node, ast.BinOp) and type(node.op) in OPERATORS:
-    left = _evaluate(node.left)
-    right = _evaluate(node.right)
 
-    if isinstance(node.op, ast.Pow) and abs(right) > 100:
-        raise ValueError("Exponent too large")
 
-    return OPERATORS[type(node.op)](left, right)
+MAX_RESULT_BITS = 100_000
+MAX_EXPONENT = 10_000
+
+
+def _evaluate(node):
+    if isinstance(node, ast.Constant) and type(node.value) in (int, float):
+        return node.value
+
+    if isinstance(node, ast.BinOp) and type(node.op) in OPERATORS:
+        left = _evaluate(node.left)
+        right = _evaluate(node.right)
+
+        if isinstance(node.op, ast.Pow):
+            if abs(right) > MAX_EXPONENT:
+                raise OverflowError("Calculation overflow")
+
+            if (
+                isinstance(left, int)
+                and isinstance(right, int)
+                and right > 0
+                and abs(left) > 1
+            ):
+                estimated_bits = abs(left).bit_length() * right
+
+                if estimated_bits > MAX_RESULT_BITS:
+                    raise OverflowError("Calculation overflow")
+
+        return OPERATORS[type(node.op)](left, right)
+
+    if isinstance(node, ast.UnaryOp) and isinstance(node.op, (ast.UAdd, ast.USub)):
+        value = _evaluate(node.operand)
+        return value if isinstance(node.op, ast.UAdd) else -value
+
+    raise ValueError("Unsupported expression")
+
+def format_result(result):
+    if isinstance(result, int):
+        if result == 0:
+            return "0"
+
+        digits = math.floor(math.log10(abs(result))) + 1
+
+        if digits > 15:
+            exponent = digits - 1
+            leading_digits = result // (10 ** (exponent - 5))
+            mantissa = leading_digits / 100000
+            return f"{mantissa:.6g}e+{exponent}"
+
+    if isinstance(result, float):
+        if result != 0 and (
+            abs(result) >= 1e15 or abs(result) < 1e-6
+        ):
+            return f"{result:.6e}"
+
+    return str(result)
