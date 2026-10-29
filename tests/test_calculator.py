@@ -13,6 +13,10 @@ class TestCalculator(unittest.TestCase):
     def test_multiplication(self):
         self.assertEqual(calculate("6 * 7"), 42)
 
+    def test_multiplication_with_x_symbol(self):
+        self.assertEqual(calculate("6 x 7"), 42)
+        self.assertEqual(calculate("6 X 7"), 42)
+
     def test_division(self):
         self.assertEqual(calculate("20 / 4"), 5)
 

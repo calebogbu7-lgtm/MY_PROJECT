@@ -1,12 +1,19 @@
+from pathlib import Path
+
 from kivy.app import App
 from kivy.lang import Builder
 from kivy.uix.boxlayout import BoxLayout
 from kivy.core.window import Window
 
-from calculator import calculate, format_result
+try:
+    from src.calculator import calculate, format_result
+except ModuleNotFoundError:
+    from calculator import calculate, format_result
 
 
 Window.size = (360, 600)
+
+Builder.load_file(str(Path(__file__).resolve().with_name("calebmath.kv")))
 
 
 class CalculatorLayout(BoxLayout):
@@ -19,6 +26,9 @@ class CalculatorLayout(BoxLayout):
 
     def on_button_press(self, button):
         value = button.text
+
+        if value in {"x", "X"}:
+            value = "*"
 
         if value == "AC":
             self.ids.display.text = ""

@@ -19,6 +19,13 @@ def calculate(expression):
     if not isinstance(expression, str):
         return "Invalid expression"
 
+    expression = expression.strip()
+    expression = expression.replace("×", "*").replace("÷", "/")
+    expression = expression.replace("x", "*").replace("X", "*")
+
+    if not expression:
+        return "Invalid expression"
+
     if len(expression) > 100:
         return "Expression too long"
 
