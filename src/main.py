@@ -1,33 +1,75 @@
+from kivy.app import App
+from kivy.lang import Builder
+from kivy.uix.boxlayout import BoxLayout
+from kivy.core.window import Window
+
 from calculator import calculate, format_result
 
 
-def main():
-    print("================================")
-    print("         CalebMath")
-    print("   Your personal calculator")
-    print("================================")
-    print("Enter a mathematical expression.")
-    print("Examples: 4 + 5, 2 ** 3, (5 + 3) * 2")
-    print("Type 'exit' to close the calculator.")
+Window.size = (360, 600)
 
-    while True:
-        expression = input("\nEnter expression: ").strip()
 
-        if expression.lower().strip() == "exit":
-            print("Thank you for using CalebMath!")
-            break
+class CalculatorLayout(BoxLayout):
 
-        if not expression:
-            print("Please enter an expression.")
-            continue
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
 
-        result = calculate(expression)
+        self.just_calculated = False
+        self.last_was_error = False
 
-        if isinstance(result, (int, float)):
-            print("Result:", format_result(result))
-        else:
-            print("Error:", result)
+    def on_button_press(self, button):
+        value = button.text
+
+        if value == "AC":
+            self.ids.display.text = ""
+            self.just_calculated = False
+            self.last_was_error = False
+            return
+
+        if value == "DEL":
+            self.ids.display.text = self.ids.display.text[:-1]
+            self.just_calculated = False
+            self.last_was_error = False
+            return
+
+        if value == "=":
+            expression = self.ids.display.text
+
+            if not expression:
+                return
+
+            result = calculate(expression)
+
+            if isinstance(result, (int, float)):
+                self.ids.display.text = format_result(result)
+                self.last_was_error = False
+            else:
+                self.ids.display.text = result
+                self.last_was_error = True
+
+            self.just_calculated = True
+            return
+
+        if self.last_was_error:
+            self.ids.display.text = ""
+            self.last_was_error = False
+            self.just_calculated = False
+
+        if self.just_calculated:
+            if value not in {"+", "-", "*", "/", "%", "**"}:
+                self.ids.display.text = ""
+
+            self.just_calculated = False
+
+        self.ids.display.text += value
+
+
+class CalebMathApp(App):
+
+    def build(self):
+        self.title = "CalebMath"
+        return CalculatorLayout()
 
 
 if __name__ == "__main__":
-    main()
+    CalebMathApp().run()

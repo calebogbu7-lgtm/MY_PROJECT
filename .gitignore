@@ -1,0 +1,18 @@
+# Python virtual environment
+.venv/
+venv/
+
+# Python cache files
+__pycache__/
+*.py[cod]
+
+# Test and coverage files
+.pytest_cache/
+.coverage
+
+# Buildozer and Android build files
+.buildozer/
+bin/
+
+# Local environment variables
+.env
